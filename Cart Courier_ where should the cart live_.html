@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<title>Cart Courier: where should the cart live?</title>
+<meta name="description" content="A tiny React game: carry the cart hop by hop through your components, then see how Context delivers it instantly.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cart Courier: where should the cart live?">
+<meta property="og:description" content="Carry the cart through every component, then see what React Context changes. 3 minutes.">
+<meta property="og:image" content="https://YOUR-SITE.netlify.app/og-cart-courier.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffd84d;--ink:#1b1f4b;--pink:#ff4f8b;--teal:#17c3b2;--blue:#2d7dff;--paper:#fff;--soft:#fff6d1;
+--disp:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
+box-sizing:border-box;color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;font-family:var(--body);font-weight:500;color:var(--ink);background:var(--bg);padding:14px 12px 48px;overflow-x:hidden}
+.wrap{max-width:560px;margin:0 auto}
+[hidden]{display:none!important}
+button{color:var(--ink);font:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:4px solid var(--pink);outline-offset:2px}
+h1,h2{font-family:var(--disp);font-weight:800;margin:0;line-height:1}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:5px 5px 0 var(--ink);padding:18px}
+.btn{font-family:var(--disp);font-weight:800;font-size:1.25rem;border:3px solid var(--ink);background:var(--pink);color:#fff;border-radius:16px;padding:10px 22px;box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s;min-height:46px}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.btn.alt{background:#fff;color:var(--ink)}
+.hero h1{font-size:clamp(3rem,13vw,4.6rem);margin:4px 0 10px}
+.hero p{font-size:1.15rem;line-height:1.5;margin:0 0 14px}
+.van{font-size:3.4rem;display:block;animation:ride 2.6s ease-in-out infinite}
+@keyframes ride{0%,100%{transform:translateX(0)}50%{transform:translateX(40px)}}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.logo{font-family:var(--disp);font-weight:800;font-size:1.5rem}
+.steps{display:flex;gap:6px}.steps span{background:#fff;border:2px solid var(--ink);border-radius:99px;padding:2px 12px;font-weight:700;font-size:.9rem}
+.steps .on{background:var(--ink);color:#fff}.steps .ok{background:var(--teal)}
+.say{display:flex;gap:10px;align-items:flex-start;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:12px 14px;margin-bottom:12px;box-shadow:4px 4px 0 var(--ink)}
+.say .av{font-size:2rem;line-height:1}.say p{margin:0;line-height:1.45;font-size:1.05rem}
+.stat{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-family:var(--disp);font-weight:800;font-size:1.3rem}
+.stat .pill{background:var(--ink);color:#fff;border-radius:99px;padding:1px 14px}
+.scene{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:10px;box-shadow:5px 5px 0 var(--ink)}
+.box{position:relative;border:2px solid var(--ink);border-radius:14px;background:var(--soft);padding:8px;margin-top:8px}
+.box .box{background:#fff}.box .box .box{background:var(--soft)}.box .box .box .box{background:#fff}
+.box:first-child{margin-top:0}
+.lb{display:flex;align-items:center;gap:8px;border:0;background:var(--ink);color:#fff;border-radius:99px;padding:4px 12px;font-weight:700;font-size:.9rem;min-height:30px;transition:transform .15s}
+.lb .t{font-weight:500;font-size:.78rem;opacity:.9}
+.box.next{outline:4px solid var(--pink);outline-offset:2px;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{outline-color:transparent}}
+.box.has::after{content:"📦";position:absolute;right:8px;top:-16px;font-size:1.9rem;animation:bob .8s ease-in-out infinite;z-index:3}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.box.done{background:#d6f7f2}
+.box.prov{box-shadow:0 0 0 4px var(--blue);background:#e3eeff}
+.box.shake{animation:shake .35s}@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.box.beam{animation:beam .7s}@keyframes beam{0%{background:var(--pink)}100%{}}
+.badge{display:inline-block;margin-top:6px;font-family:var(--disp);font-weight:800;font-size:1.3rem;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:0 12px}
+.add{display:block;margin-top:6px;background:var(--teal);border:2px solid var(--ink);border-radius:12px;padding:8px 14px;font-weight:700;box-shadow:3px 3px 0 var(--ink);min-height:44px}
+.add:active{transform:translate(3px,3px);box-shadow:none}
+#items{margin-top:6px;font-size:1.05rem;min-height:1.5em}
+#items span{display:inline-block;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:0 8px;margin:0 6px 4px 0;animation:pop .35s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.5);opacity:0}}
+.code{margin-top:12px;background:var(--ink);color:#e7f1ff;border-radius:16px;padding:14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.55;overflow-x:auto;white-space:pre}
+.code b{color:var(--bg)}
+#next{margin-top:12px;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+.rule{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.rule div{border:2px solid var(--ink);border-radius:14px;padding:8px 10px;font-weight:700;line-height:1.3;font-size:.92rem;background:#fff}
+.rule .c{background:#e3eeff}.rule .l{background:#d6f7f2}
+.st{text-align:center}
+.st .em{font-size:4rem;line-height:1;display:block;margin-bottom:4px}
+.st h2{font-size:2rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;margin:2px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 14px}.chips i{font-style:normal;background:var(--soft);border:2px solid var(--ink);border-radius:99px;padding:2px 12px;font-weight:700;font-size:.9rem}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick .btn{font-size:1.1rem;padding:12px 8px}.pick .loc{background:var(--teal);color:var(--ink)}.pick .ctx{background:var(--blue)}
+.pick .btn small{display:block;font-family:var(--body);font-weight:500;font-size:.78rem;opacity:.9}
+.fb{margin-top:14px;padding:12px 14px;border-radius:14px;border:3px solid var(--ink);line-height:1.45;text-align:left}
+.fb.good{background:#d6f7f2}.fb.bad{background:#ffd6e4}
+.prog{display:flex;gap:6px;justify-content:center;margin:0 0 12px}.prog i{width:34px;height:10px;border-radius:99px;border:2px solid var(--ink);background:#fff}.prog i.g{background:var(--teal)}.prog i.b{background:var(--pink)}.prog i.n{background:var(--ink)}
+.end{text-align:center}.end .tr{font-size:4.5rem;display:block;animation:ride 2.6s ease-in-out infinite}
+.end h1{font-size:clamp(2.2rem,9vw,3rem);margin:4px 0 10px}
+.res{list-style:none;padding:0;margin:10px 0;display:grid;gap:8px;text-align:left}.res li{background:var(--soft);border:2px solid var(--ink);border-radius:12px;padding:9px 12px;line-height:1.4}
+.rem{text-align:left;margin:10px 0;padding-left:20px;line-height:1.55}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:700;padding:10px 16px;border-radius:14px;width:max-content;max-width:min(92vw,380px);text-align:center;z-index:20;line-height:1.35;animation:pop .25s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="card hero" id="start">
+    <span class="van" aria-hidden="true">🛵</span>
+    <h1>Cart Courier</h1>
+    <p>A shopper just added pizza to the cart. Your job: deliver that update to the right parts of the page. First the hard way, then the smart way.</p>
+    <button class="btn" id="go">Start delivering</button>
+  </section>
+
+  <section id="game" hidden>
+    <div class="top"><span class="logo">Cart Courier</span><div class="steps" id="steps"><span>Hard way</span><span>Smart way</span><span>Sort it</span></div></div>
+    <div class="say"><span class="av" aria-hidden="true">🛵</span><p id="say" aria-live="polite"></p></div>
+
+    <div id="play">
+      <div class="stat"><span id="sl"></span><span class="pill" id="sv"></span></div>
+      <div class="scene" id="scene">
+        <div class="box" data-id="app"><button class="lb" type="button"><span>App</span><span class="t">the cart lives here</span></button>
+          <div class="box" data-id="header"><button class="lb" type="button"><span>Header</span><span class="t"></span></button>
+            <div class="box" data-id="nav"><button class="lb" type="button"><span>Nav</span><span class="t"></span></button>
+              <div class="box" data-id="badge"><button class="lb" type="button"><span>CartBadge</span><span class="t"></span></button><span class="badge" id="bn">🛒 0</span></div></div></div>
+          <div class="box" data-id="page"><button class="lb" type="button"><span>ProductPage</span><span class="t"></span></button>
+            <div class="box" data-id="list"><button class="lb" type="button"><span>ProductList</span><span class="t"></span></button>
+              <div class="box" data-id="card"><button class="lb" type="button"><span>ProductCard</span><span class="t"></span></button>
+                <button class="add" id="add" type="button">Add pizza 🍕</button></div></div>
+            <div class="box" data-id="panel"><button class="lb" type="button"><span>CartPanel</span><span class="t"></span></button><div id="items">Cart is empty</div></div></div>
+        </div>
+      </div>
+      <div class="code" id="code" hidden></div>
+      <button class="btn" id="next" hidden></button>
+    </div>
+
+    <div id="sort" hidden>
+      <div class="rule"><div class="c">Used by many components far apart? Put it in Context.</div><div class="l">Used by just one? Keep it local.</div></div>
+      <div class="prog" id="prog" aria-hidden="true"></div>
+      <div class="card st" id="stc">
+        <span class="em" id="se" aria-hidden="true"></span><h2 id="sn"></h2>
+        <div>Used by</div><div class="chips" id="su"></div>
+        <div class="pick"><button class="btn loc" id="bl" type="button">Keep local<small>press ←</small></button><button class="btn ctx" id="bc" type="button">Put in Context<small>press →</small></button></div>
+        <div class="fb" id="fb" hidden></div>
+        <button class="btn" id="nx" hidden style="margin-top:12px"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card end" id="end" hidden>
+    <span class="tr" aria-hidden="true">🏆</span>
+    <h1 id="et"></h1>
+    <ul class="res" id="res"></ul>
+    <ol class="rem">
+      <li>Use Context when several components genuinely need the same state.</li>
+      <li>Keep component-specific state local.</li>
+      <li>Don’t put every piece of state in one global context.</li>
+      <li>Keep state updates organised as the app grows.</li>
+    </ol>
+    <div class="row"><button class="btn" id="again" type="button">Play again</button><button class="btn alt" id="share" type="button">Copy my result</button></div>
+    <p id="sm" role="status" style="margin:10px 0 0"></p>
+  </section>
+</main>
+<div id="toast" role="status" hidden></div>
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i)};
+var NAMES={app:"App",header:"Header",nav:"Nav",badge:"CartBadge",page:"ProductPage",list:"ProductList",card:"ProductCard",panel:"CartPanel"};
+var PASS={header:1,nav:1,page:1,list:1,card:1};
+var SEQ=["card","list","page","app","header","nav","badge","page","panel"];
+var FOOD=["🍕 Pizza","🥤 Soda","🍪 Cookie"];
+var CARDS=[
+{e:"🛒",n:"cartItems",u:["CartBadge","AddButton","CartPanel"],a:"ctx",w:"Three components far apart need it, so Context saves passing it through everything in between."},
+{e:"🔍",n:"searchText",u:["SearchBar"],a:"loc",w:"Only SearchBar uses it. In a shared context, every keystroke would re-render everything listening."},
+{e:"🌗",n:"theme",u:["Header","ProductPage","CartPanel","Footer"],a:"ctx",w:"Four components across the app share it. Great fit for Context."},
+{e:"📏",n:"selectedSize",u:["SizePicker"],a:"loc",w:"One component owns it, so keep it right where it’s used."},
+{e:"👤",n:"currentUser",u:["Header","CartPanel","Checkout"],a:"ctx",w:"It’s needed in several places. Provide it once and let them read it."},
+{e:"💬",n:"tooltipOpen",u:["InfoIcon"],a:"loc",w:"A tiny bit of UI state for one icon. Keep it local."}
+];
+var S,toastT;
+function toast(t){var e=$("toast");e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){e.hidden=true},2300)}
+function show(id){["start","game","end"].forEach(function(s){$(s).hidden=s!==id});window.scrollTo(0,0)}
+function say(t){$("say").textContent=t}
+function el(id){return document.querySelector('.box[data-id="'+id+'"]')}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function clearScene(){
+ Array.prototype.forEach.call(document.querySelectorAll(".box"),function(b){b.classList.remove("next","has","done","prov","shake","beam");var t=b.querySelector(":scope>.lb .t");if(t&&b.dataset.id!=="app")t.textContent=""});
+ S.items=[];S.n=0;$("bn").textContent="🛒 0";$("items").textContent="Cart is empty";
+}
+function steps(n){Array.prototype.forEach.call($("steps").children,function(s,i){s.className=i+1===n?"on":i+1<n?"ok":""})}
+function level(n){
+ S.lv=n;steps(n);$("next").hidden=true;$("code").hidden=true;
+ $("play").hidden=n===3;$("sort").hidden=n!==3;
+ if(n===1){clearScene();S.idx=-1;S.hops=0;S.add=0;$("sl").textContent="Hops";$("sv").textContent="0";say("A shopper wants pizza. Tap “Add pizza” to start. The cart lives in App, so the news has to travel there.")}
+ if(n===2){clearScene();S.prov=false;S.adds=0;$("sl").textContent="Hops";$("sv").textContent="0";say("New idea: tap App to wrap it in a CartContext.Provider. Then add three things.");el("app").classList.add("next")}
+ if(n===3){S.i=0;S.score=0;S.wasted=0;S.order=shuffle(CARDS);card()}
+}
+function mark(id){Array.prototype.forEach.call(document.querySelectorAll(".box"),function(b){b.classList.remove("has","next")});if(id)el(id).classList.add("has")}
+function nextTarget(){if(S.idx<SEQ.length)el(SEQ[S.idx]).classList.add("next")}
+function setItems(){$("bn").textContent="🛒 "+S.n;$("items").innerHTML=S.items.length?S.items.map(function(f){return"<span>"+f+"</span>"}).join(""):"Cart is empty"}
+function hop(id){
+ if(S.lv!==1||S.idx>=SEQ.length)return;
+ if(S.idx<0){toast("Tap “Add pizza” first.");return}
+ var want=SEQ[S.idx];
+ if(id!==want){var b=el(id);if(b){b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}toast("Next stop: "+NAMES[want]+" (the pulsing box)");return}
+ S.hops++;$("sv").textContent=S.hops;
+ var b2=el(id);b2.classList.add("done");
+ var t=b2.querySelector(":scope>.lb .t");if(PASS[id])t.textContent="just passing it 😩";
+ if(id==="badge"){S.n=1;setItems();t.textContent="updated ✓"}
+ if(id==="panel"){S.items=[FOOD[0]];setItems();t.textContent="updated ✓"}
+ S.idx++;
+ if(id==="badge"){mark("app");say("Badge updated. Now the CartPanel needs it too. Back to App, then down again.");S.idx=7;S.idx=7;nextTarget();return}
+ if(S.idx>=SEQ.length){mark(null);finish1();return}
+ mark(id);nextTarget();
+ var lines={card:"Up it goes. Next: ProductList.",list:"Keep going: ProductPage.",page:S.idx===3?"Almost at the top. Tap App.":"Last stop: CartPanel.",app:"The cart lives here. Now carry the new cart down to CartBadge: Header first.",header:"Header doesn’t use it, but it has to pass it on. Next: Nav.",nav:"Nearly there: CartBadge."};
+ if(lines[id])say(lines[id]);
+}
+function finish1(){
+ say("Done: "+S.hops+" hops for ONE pizza. Header, Nav, ProductList, ProductPage and ProductCard only passed it along. Imagine this with 50 components.");
+ $("next").textContent="Show me the smart way";$("next").hidden=false;$("next").focus({preventScroll:true});
+}
+function addClick(){
+ if(S.lv===1){
+  if(S.idx>=0){toast("Finish this delivery first. Follow the pulsing box.");return}
+  S.idx=0;S.hops=0;mark("card");nextTarget();say("Pizza added in ProductCard, but the cart lives in App. Carry it up: tap the pulsing box.");return
+ }
+ if(S.lv===2){
+  if(!S.prov){toast("Nobody is listening yet. Tap App to add the Provider first.");var a=el("app");a.classList.remove("shake");void a.offsetWidth;a.classList.add("shake");return}
+  if(S.adds>=3)return;
+  S.items.push(FOOD[S.adds]);S.n++;S.adds++;setItems();
+  ["badge","card","panel"].forEach(function(i){var b=el(i);b.classList.remove("beam");void b.offsetWidth;b.classList.add("beam")});
+  say(S.adds<3?"Instant. Zero hops. Ask for another one.":"Three items, zero hops. Header, Nav, ProductList and the rest never touched the cart.");
+  if(S.adds===3){
+   $("code").innerHTML='<b>// App.jsx</b>\n&lt;CartContext.Provider value={{ items, addItem }}&gt;\n  &lt;Header /&gt;\n  &lt;ProductPage /&gt;\n&lt;/CartContext.Provider&gt;\n\n<b>// AddButton, CartBadge, CartPanel</b>\nconst { items, addItem } = useContext(CartContext);';
+   $("code").hidden=false;$("next").textContent="One last thing: what belongs in Context?";$("next").hidden=false;$("next").focus({preventScroll:true})
+  }
+ }
+}
+function boxClick(id){
+ if(S.lv===1)hop(id);
+ else if(S.lv===2){
+  if(id==="app"&&!S.prov){
+   S.prov=true;var a=el("app");a.classList.add("prov");a.classList.remove("next");
+   a.querySelector(":scope>.lb .t").textContent="📡 CartContext.Provider";
+   ["badge","card","panel"].forEach(function(i){var b=el(i).querySelector(":scope>.lb .t");b.textContent="📡 useContext"});
+   say("Provider is on. Now AddButton, CartBadge and CartPanel can read the cart directly. Tap “Add pizza”.")
+  }else if(id!=="app")toast("The Provider goes around everything, so tap App.");
+ }
+}
+function card(){
+ var c=S.order[S.i];
+ $("se").textContent=c.e;$("sn").textContent=c.n;$("su").innerHTML=c.u.map(function(u){return"<i>"+u+"</i>"}).join("");
+ $("fb").hidden=true;$("nx").hidden=true;$("bl").disabled=$("bc").disabled=false;S.done=false;
+ $("prog").innerHTML=S.order.map(function(_,i){return'<i class="'+(i<S.i?(S.res[i]?"g":"b"):i===S.i?"n":"")+'"></i>'}).join("");
+ say("Where should this state live? Check who uses it.");
+}
+function choose(v){
+ if(S.done)return;S.done=true;
+ var c=S.order[S.i],ok=v===c.a;S.res[S.i]=ok;if(ok)S.score++;
+ $("bl").disabled=$("bc").disabled=true;
+ var f=$("fb");f.hidden=false;f.className="fb "+(ok?"good":"bad");
+ var msg;
+ if(ok)msg="✅ Right. "+c.w;
+ else if(v==="ctx"){S.wasted+=9;msg="💥 Re-render storm. Every change would re-render 9 components, and only "+c.u[0]+" cares. "+c.w}
+ else msg="❓ Undefined. State that lives inside one component can’t be read by "+c.u.slice(1).join(" or ")+". "+c.w;
+ f.textContent=msg;
+ $("nx").textContent=S.i===S.order.length-1?"See my result":"Next card";$("nx").hidden=false;$("nx").focus({preventScroll:true});
+}
+function nextCard(){S.i++;if(S.i>=S.order.length)finish();else card()}
+function finish(){
+ show("end");
+ var t=S.score===6?"Context Architect":S.score>=4?"State Strategist":"Prop Driller";
+ $("et").textContent=t;
+ $("res").innerHTML='<li>Hard way: <b>9 hops</b> to move one pizza.</li><li>Smart way: <b>0 hops</b> with a Provider.</li><li>Sorted state correctly: <b>'+S.score+' of 6</b>'+(S.wasted?", with "+S.wasted+" wasted re-renders":"")+'.</li>';
+ $("again").focus({preventScroll:true});
+}
+function share(){
+ var t="I just played Cart Courier: 9 hops to deliver one cart update with props, 0 with a Context Provider. Then I sorted state into Context vs local ("+S.score+"/6). Try it! ⚛️ #ReactJS #WebDevelopment",m=$("sm");
+ try{navigator.clipboard.writeText(t).then(function(){m.textContent="Copied! Paste it anywhere."},function(){m.textContent=t})}catch(e){m.textContent=t}
+}
+function start(){S={res:[]};show("game");level(1)}
+$("go").addEventListener("click",start);$("again").addEventListener("click",start);$("share").addEventListener("click",share);
+$("add").addEventListener("click",function(e){e.stopPropagation();addClick()});
+$("scene").addEventListener("click",function(e){var b=e.target.closest(".box");if(b&&!e.target.closest("#add"))boxClick(b.dataset.id)});
+$("next").addEventListener("click",function(){level(S.lv+1)});
+$("bl").addEventListener("click",function(){choose("loc")});$("bc").addEventListener("click",function(){choose("ctx")});
+$("nx").addEventListener("click",nextCard);
+document.addEventListener("keydown",function(e){if(!$("sort").hidden&&!S.done){if(e.key==="ArrowLeft")choose("loc");else if(e.key==="ArrowRight")choose("ctx")}});
+S={res:[]};
+})();
+</script>
+</body>
+</html>
